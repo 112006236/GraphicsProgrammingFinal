@@ -1,0 +1,8 @@
+#version 460 core
+in vec3 world,N;in vec2 uv;flat in int type;
+layout(location=0)out vec4 pos;layout(location=1)out vec4 norm;layout(location=2)out vec4 ambient;layout(location=3)out vec4 diffuse;layout(location=4)out vec4 spec;
+layout(location=2)uniform int pixelProcessId;
+layout(location=4)uniform sampler2D terrainColor;
+layout(binding=4)uniform sampler2D grassTex;layout(binding=5)uniform sampler2D bush1Tex;layout(binding=6)uniform sampler2D bush5Tex;layout(binding=7)uniform sampler2D building2Tex;layout(binding=8)uniform sampler2D building1Tex;layout(binding=9)uniform sampler2D planeTex;layout(binding=10)uniform sampler2D rockTex;layout(binding=11)uniform sampler2D rockNormal;
+uniform bool normalOn, shadowPass;uniform vec3 emission;
+void main(){vec4 c=vec4(1);switch(type){case 0:c=texture(grassTex,uv);break;case 1:c=texture(bush1Tex,uv);break;case 2:c=texture(bush5Tex,uv);break;case 3:c=texture(building2Tex,uv);break;case 4:c=texture(building1Tex,uv);break;case 5:c=texture(planeTex,uv);break;case 6:c=texture(rockTex,uv);break;case 7:c=pixelProcessId==7?texture(terrainColor,uv):vec4(0);break;}if(type<=2&&!(shadowPass&&type>0)&&c.a<.5)discard;vec3 n=normalize(N);if(!gl_FrontFacing)n=-n;if(type==6&&normalOn){vec3 dx=dFdx(world),dy=dFdy(world);vec2 tx=dFdx(uv),ty=dFdy(uv);float det=tx.x*ty.y-tx.y*ty.x;if(abs(det)>1e-8){vec3 t=(dx*ty.y-dy*tx.y)/det;t=normalize(t-n*dot(n,t));vec3 b=normalize(cross(n,t))*sign(det);n=normalize(mat3(t,b,n)*(texture(rockNormal,uv).rgb*2-1));}}pos=vec4(world,1);norm=vec4(n,1);ambient=vec4(c.rgb,1);diffuse=vec4(type==8?emission:c.rgb,type==8?2:1);spec=vec4(vec3(type==5||type==6?1:0),type==5||type==6?32:1);}

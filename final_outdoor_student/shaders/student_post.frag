@@ -1,0 +1,3 @@
+#version 460 core
+in vec2 uv;out vec4 color;layout(binding=0)uniform sampler2D scene;layout(binding=1)uniform sampler2D glow;uniform int mode;uniform vec2 axis;uniform bool bloom,rawOutput;uniform mat4 invProjection;uniform int mip;
+void main(){if(mode==3){float d=textureLod(scene,uv,float(mip)).r;vec4 p=invProjection*vec4(uv*2-1,d*2-1,1);color=vec4(vec3(clamp(-p.z/p.w/512,0,1)),1);return;}vec3 c=texture(scene,uv).rgb;if(mode==1||mode==2){vec2 px=axis/vec2(textureSize(scene,0));c=vec3(0);for(int i=-4;i<=4;i++){vec3 s=texture(scene,uv+float(i)*px).rgb;if(mode==1)s=max(s-vec3(1),0);c+=s*exp(-float(i*i)/8.0)/4.898;} }else{if(bloom)c+=texture(glow,uv).rgb*.65;if(rawOutput)c=pow(max(c,0)/(1+max(c,0)),vec3(1./2.2));}color=vec4(c,1);}

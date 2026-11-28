@@ -1,0 +1,3 @@
+#version 460 core
+layout(local_size_x=8,local_size_y=8)in;layout(binding=0)uniform sampler2D source;layout(r32f,binding=0)writeonly uniform image2D dest;uniform int level;
+void main(){ivec2 p=ivec2(gl_GlobalInvocationID.xy),size=imageSize(dest);if(any(greaterThanEqual(p,size)))return;float z=0;if(level<0)z=texelFetch(source,p,0).r;else{ivec2 old=textureSize(source,level);ivec2 a=p*old/size,b=(p+1)*old/size;for(int y=a.y;y<b.y;y++)for(int x=a.x;x<b.x;x++)z=max(z,texelFetch(source,ivec2(x,y),level).r);}imageStore(dest,p,vec4(z));}
